@@ -124,7 +124,7 @@ export default function Invoices() {
               const normalizedK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
               return keywords.some(kw => {
                  const normalizedKW = kw.toLowerCase().replace(/[^a-z0-9]/g, '');
-                 return normalizedK.includes(normalizedKW) || normalizedKW.includes(normalizedK);
+                 return normalizedK.includes(normalizedKW);
               });
             });
             return found ? found[1] : '';
@@ -160,7 +160,7 @@ export default function Invoices() {
           }
 
           invoicesMap[invNo].items.push({
-            description: find(['item', 'description', 'particulars', 'product', 'service', 'name']) || 'Service',
+            description: find(['item', 'description', 'particulars', 'product', 'service']) || 'Service',
             qty: parseFloat(find(['qty', 'quantity', 'units'])) || 1,
             price: amount,
             tax_rate: taxRate,

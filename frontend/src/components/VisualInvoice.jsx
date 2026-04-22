@@ -84,7 +84,7 @@ export default function VisualInvoice({ invoice, company, client }) {
     supply_type, status = 'UNPAID',
     subtotal = 0, total_cgst = 0, total_sgst = 0, total_igst = 0,
     rounded_off = 0, total = 0,
-    line_items = [],
+    items: line_items = [],
     terms,
   } = invoice;
 
