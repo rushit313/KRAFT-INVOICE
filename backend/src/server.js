@@ -33,13 +33,24 @@ app.use('/api/payments', require('./routes/payments'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', app: 'Kraft Invoicing' }));
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({ 
     status: 'Operational', 
     name: 'Kraft Invoicing API', 
     version: '1.2.0',
     timestamp: new Date().toISOString()
   });
+});
+
+// Serve frontend in production
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
+app.get('*', (req, res) => {
+  if (fs.existsSync(path.join(frontendDistPath, 'index.html'))) {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  } else {
+    res.status(404).send('Frontend not built');
+  }
 });
 
 const PORT = process.env.PORT || 3001;

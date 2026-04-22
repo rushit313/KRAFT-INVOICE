@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: kraft-invoicing
+    env: node
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    startCommand: cd backend && node src/server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_PATH
+        value: /data/kraft.db
+      - key: UPLOADS_PATH
+        value: /data/uploads
+    disk:
+      name: kraft-data
+      mountPath: /data
+      sizeGB: 1

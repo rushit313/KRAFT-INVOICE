@@ -9,15 +9,15 @@ const uploadsPath = path.resolve(__dirname, '../../', (process.env.UPLOADS_PATH 
 const upload = multer({ dest: uploadsPath });
 
 router.get('/', (req, res) => {
-  res.json(db.prepare('SELECT * FROM purchases ORDER BY invoice_date DESC').all());
+  res.json(db.prepare('SELECT * FROM purchase_bills ORDER BY issue_date DESC').all());
 });
 
 router.post('/', (req, res) => {
-  const { vendor_name, vendor_gstin, vendor_address, invoice_no, invoice_date, subtotal, total_cgst, total_sgst, total_igst, total, place_of_supply, line_items } = req.body;
-  const result = db.prepare('INSERT INTO purchases (vendor_name, vendor_gstin, vendor_address, invoice_no, invoice_date, subtotal, total_cgst, total_sgst, total_igst, total, place_of_supply) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(vendor_name, vendor_gstin, vendor_address, invoice_no, invoice_date, subtotal, total_cgst, total_sgst, total_igst, total, place_of_supply);
+  const { vendor_name, vendor_gstin, invoice_no, invoice_date, subtotal, total_cgst, total_sgst, total_igst, total, line_items } = req.body;
+  const result = db.prepare('INSERT INTO purchase_bills (vendor_name, vendor_gstin, bill_no, issue_date, subtotal, total_cgst, total_sgst, total_igst, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(vendor_name, vendor_gstin, invoice_no, invoice_date, subtotal, total_cgst, total_sgst, total_igst, total);
   const purchaseId = result.lastInsertRowid;
   if (line_items && line_items.length) {
-    const insertItem = db.prepare('INSERT INTO purchase_items (purchase_id, description, hsn_sac, qty, unit, price, taxable_value, cgst_pct, cgst_amt, sgst_pct, sgst_amt, igst_pct, igst_amt, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    const insertItem = db.prepare('INSERT INTO purchase_bill_items (purchase_bill_id, description, hsn_sac, qty, unit, price, taxable_value, cgst_pct, cgst_amt, sgst_pct, sgst_amt, igst_pct, igst_amt, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     for (const li of line_items) {
       insertItem.run(purchaseId, li.description, li.hsn_sac, li.qty, li.unit, li.price, li.taxable_value, li.cgst_pct, li.cgst_amt, li.sgst_pct, li.sgst_amt, li.igst_pct, li.igst_amt, li.amount);
     }
@@ -26,7 +26,7 @@ router.post('/', (req, res) => {
 });
 
 router.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM purchases WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM purchase_bills WHERE id = ?').run(req.params.id);
   res.json({ message: 'Deleted' });
 });
 
