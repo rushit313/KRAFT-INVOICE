@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Upload, FileText, CheckCircle, Sparkles, ArrowLeft, Plus, Trash2 } from 'lucide-react';
