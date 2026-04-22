@@ -764,4 +764,64 @@ router.post('/confirm-extract', (req, res) => {
   }
 });
 
+router.post('/bulk', (req, res) => {
+  try {
+    const { invoices } = req.body;
+    if (!invoices || !Array.isArray(invoices)) return res.status(400).json({ error: 'Invalid payload' });
+
+    let importedCount = 0;
+    
+    db.transaction(() => {
+      for (const extracted of invoices) {
+        let client_id = null;
+        if (extracted.client_gstin) {
+          const c = db.prepare('SELECT id FROM clients WHERE gstin = ?').get(extracted.client_gstin);
+          if (c) client_id = c.id;
+        }
+        if (!client_id && extracted.client_name) {
+          const c = db.prepare('SELECT id FROM clients WHERE company_name LIKE ?').get('%' + extracted.client_name + '%');
+          if (c) client_id = c.id;
+        }
+        if (!client_id) {
+          const resC = db.prepare('INSERT INTO clients (company_name, gstin, billing_address, city, state, pin, phone, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
+            extracted.client_name || 'Migrated Client',
+            extracted.client_gstin || null,
+            extracted.client_address || null,
+            extracted.client_city || null,
+            extracted.client_state || null,
+            extracted.client_pin || null,
+            extracted.client_phone || null,
+            extracted.client_email || null
+          );
+          client_id = resC.lastInsertRowid;
+        }
+        
+        try {
+          createInvoiceInternal({
+            invoice_no: extracted.invoice_no,
+            issue_date: extracted.issue_date || new Date().toISOString().split('T')[0],
+            client_id,
+            place_of_supply: extracted.place_of_supply || null,
+            supply_type: extracted.supply_type || 'intra',
+            status: extracted.status || 'unpaid',
+            items: extracted.items && extracted.items.length ? extracted.items : [{ description: 'Migrated Bill', qty: 1, price: 0, tax_rate: 18 }],
+          });
+          importedCount++;
+        } catch (e) {
+          if (e.message.includes('already exists')) {
+            console.warn('Skipping duplicate invoice:', extracted.invoice_no);
+          } else {
+            throw e;
+          }
+        }
+      }
+    })();
+
+    res.status(201).json({ message: `Successfully imported ${importedCount} invoices` });
+  } catch (err) {
+    console.error('[BULK IMPORT ERROR]:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
