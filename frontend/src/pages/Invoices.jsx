@@ -368,7 +368,7 @@ export default function Invoices() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {invoices.map(inv => (
+                    {[...invoices].sort((a, b) => new Date(b.issue_date || 0) - new Date(a.issue_date || 0)).map(inv => (
                       <tr 
                         key={inv.id} 
                         onClick={() => selectInvoice(inv.id)}

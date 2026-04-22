@@ -162,24 +162,37 @@ export default function VisualInvoice({ invoice, company, client }) {
 
       {/* ── BILL TO / SHIP TO ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, borderBottom: '1px solid #e0e0e0' }}>
-        {['Bill To', 'Ship To'].map((label, i) => (
-          <div key={label} style={{
-            padding: '12px 24px',
-            borderRight: i === 0 ? '1px solid #e0e0e0' : 'none',
-          }}>
-            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: '#888', marginBottom: 6 }}>{label}</div>
-            {client ? (
-              <>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{client.company_name}</div>
-                {client.billing_address && <div style={{ color: '#555', marginTop: 2 }}>{client.billing_address}</div>}
-                {(client.city || client.state) && <div style={{ color: '#555' }}>{[client.city, client.state, client.pin].filter(Boolean).join(', ')}</div>}
-                {client.gstin && <div style={{ marginTop: 4 }}>GSTIN: <b>{client.gstin}</b></div>}
-              </>
-            ) : (
-              <div style={{ color: '#aaa', fontStyle: 'italic' }}>Client details not set</div>
-            )}
-          </div>
-        ))}
+        {['Bill To', 'Ship To'].map((label, i) => {
+          const actualClient = client || {
+            company_name: invoice.client_name,
+            billing_address: invoice.client_billing_address,
+            shipping_address: invoice.client_shipping_address,
+            city: invoice.client_city,
+            state: invoice.client_state,
+            pin: invoice.client_pin,
+            gstin: invoice.client_gstin,
+          };
+          const isShipTo = i === 1;
+          const addressToUse = isShipTo ? (actualClient.shipping_address || actualClient.billing_address) : actualClient.billing_address;
+          return (
+            <div key={label} style={{
+              padding: '12px 24px',
+              borderRight: i === 0 ? '1px solid #e0e0e0' : 'none',
+            }}>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, color: '#888', marginBottom: 6 }}>{label}</div>
+              {actualClient && actualClient.company_name ? (
+                <>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{actualClient.company_name}</div>
+                  {addressToUse && <div style={{ color: '#555', marginTop: 2 }}>{addressToUse}</div>}
+                  {(actualClient.city || actualClient.state) && <div style={{ color: '#555' }}>{[actualClient.city, actualClient.state, actualClient.pin].filter(Boolean).join(', ')}</div>}
+                  {actualClient.gstin && <div style={{ marginTop: 4 }}>GSTIN: <b>{actualClient.gstin}</b></div>}
+                </>
+              ) : (
+                <div style={{ color: '#aaa', fontStyle: 'italic' }}>Client details not set</div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* ── LINE ITEMS TABLE ── */}
