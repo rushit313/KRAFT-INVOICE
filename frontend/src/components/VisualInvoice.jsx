@@ -86,9 +86,14 @@ export default function VisualInvoice({ invoice, company, client }) {
     rounded_off = 0, total = 0,
     items: line_items = [],
     terms,
+    type = 'invoice',
   } = invoice;
 
   const isInter = supply_type === 'inter';
+
+  let title = 'TAX INVOICE';
+  if (type === 'quote') title = 'QUOTATION';
+  if (type === 'proforma') title = 'PROFORMA INVOICE';
 
   return (
     <div style={{
@@ -122,14 +127,16 @@ export default function VisualInvoice({ invoice, company, client }) {
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 1, color: '#111' }}>TAX INVOICE</div>
+          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 1, color: '#111', textTransform: 'uppercase' }}>{title}</div>
           <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{invoice_no || '—'}</div>
-          <div style={{
-            display: 'inline-block', marginTop: 6,
-            background: '#1a6b5e', color: '#fff',
-            fontSize: 10, fontWeight: 600, padding: '2px 10px',
-            borderRadius: 2, letterSpacing: 0.5,
-          }}>ORIGINAL COPY</div>
+          {type === 'invoice' && (
+            <div style={{
+              display: 'inline-block', marginTop: 6,
+              background: '#1a6b5e', color: '#fff',
+              fontSize: 10, fontWeight: 600, padding: '2px 10px',
+              borderRadius: 2, letterSpacing: 0.5,
+            }}>ORIGINAL COPY</div>
+          )}
         </div>
       </div>
 

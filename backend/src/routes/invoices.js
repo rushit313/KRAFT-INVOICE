@@ -96,18 +96,19 @@ router.get('/:id', (req, res) => {
 });
 
 function createInvoiceInternal(data) {
-  const { invoice_no, issue_date, due_date, po_number, client_id, place_of_supply, supply_type, items, terms, notes, status } = data;
+  const { invoice_no, issue_date, due_date, po_number, client_id, place_of_supply, supply_type, items, terms, notes, status, type } = data;
   if (!client_id || !items || !items.length) throw new Error('client_id and items are required');
   const invNo = invoice_no || getNextInvoiceNo();
   const existing = db.prepare('SELECT id FROM invoices WHERE invoice_no = ?').get(invNo);
   if (existing) throw new Error('Invoice number ' + invNo + ' already exists');
   const sType = supply_type || 'intra';
+  const iType = type || 'invoice';
   const calcedItems = items.map(li => calcLineItem(li, sType));
   const totals = calcTotals(calcedItems);
-  const result = db.prepare('INSERT INTO invoices (invoice_no, issue_date, due_date, po_number, client_id, place_of_supply, supply_type, subtotal, total_cgst, total_sgst, total_igst, rounded_off, total, status, terms, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+  const result = db.prepare('INSERT INTO invoices (invoice_no, issue_date, due_date, po_number, client_id, place_of_supply, supply_type, subtotal, total_cgst, total_sgst, total_igst, rounded_off, total, status, terms, notes, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
     invNo, issue_date, due_date, po_number, client_id, place_of_supply, sType,
     totals.subtotal, totals.total_cgst, totals.total_sgst, totals.total_igst, totals.rounded_off, totals.total,
-    status || 'unpaid', terms, notes
+    status || 'unpaid', terms, notes, iType
   );
   const invoiceId = result.lastInsertRowid;
   const insertItem = db.prepare('INSERT INTO invoice_items (invoice_id, item_id, description, hsn_sac, qty, unit, price, discount_pct, taxable_value, cgst_pct, cgst_amt, sgst_pct, sgst_amt, igst_pct, igst_amt, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
@@ -126,7 +127,7 @@ router.post('/', (req, res) => {
 router.put('/:id', (req, res) => {
   const invoice = db.prepare('SELECT * FROM invoices WHERE id = ?').get(req.params.id);
   if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
-  const { issue_date, due_date, po_number, client_id, place_of_supply, supply_type, items, terms, notes, status } = req.body;
+  const { issue_date, due_date, po_number, client_id, place_of_supply, supply_type, items, terms, notes, status, type } = req.body;
   const sType = supply_type || invoice.supply_type;
   let totals = {};
   if (items && items.length) {
@@ -138,8 +139,8 @@ router.put('/:id', (req, res) => {
       insertItem.run(req.params.id, li.item_id || null, li.description, li.hsn_sac, li.qty, li.unit || 'Nos', li.price, li.discount_pct || 0, li.taxable_value, li.cgst_pct, li.cgst_amt, li.sgst_pct, li.sgst_amt, li.igst_pct, li.igst_amt, li.amount);
     }
   }
-  let sql = 'UPDATE invoices SET issue_date=COALESCE(?,issue_date), due_date=COALESCE(?,due_date), po_number=COALESCE(?,po_number), client_id=COALESCE(?,client_id), place_of_supply=COALESCE(?,place_of_supply), supply_type=?, terms=COALESCE(?,terms), notes=COALESCE(?,notes), status=COALESCE(?,status)';
-  const params = [issue_date, due_date, po_number, client_id, place_of_supply, sType, terms, notes, status];
+  let sql = 'UPDATE invoices SET issue_date=COALESCE(?,issue_date), due_date=COALESCE(?,due_date), po_number=COALESCE(?,po_number), client_id=COALESCE(?,client_id), place_of_supply=COALESCE(?,place_of_supply), supply_type=?, terms=COALESCE(?,terms), notes=COALESCE(?,notes), status=COALESCE(?,status), type=COALESCE(?,type)';
+  const params = [issue_date, due_date, po_number, client_id, place_of_supply, sType, terms, notes, status, type];
   if (items && items.length) {
     sql += ', subtotal=?, total_cgst=?, total_sgst=?, total_igst=?, rounded_off=?, total=?';
     params.push(totals.subtotal, totals.total_cgst, totals.total_sgst, totals.total_igst, totals.rounded_off, totals.total);

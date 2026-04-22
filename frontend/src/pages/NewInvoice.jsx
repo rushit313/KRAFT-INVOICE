@@ -177,7 +177,7 @@ export default function NewInvoice({ editData, onSaved }) {
 
   const [form, setForm] = useState({
     invoice_no: '', client_id: '', client_name: '', place_of_supply: '', supply_type: 'intra',
-    issue_date: today, due_date: dueDate, po_number: '', terms: '', notes: '', status: 'unpaid',
+    issue_date: today, due_date: dueDate, po_number: '', terms: '', notes: '', status: 'unpaid', type: 'invoice',
     ...(editData || {})
   });
   const [lineItems, setLineItems] = useState(editData?.items?.length ? editData.items.map(i => ({...i, amount: i.amount || 0})) : [emptyItem()]);
@@ -398,6 +398,14 @@ export default function NewInvoice({ editData, onSaved }) {
                   <select value={form.place_of_supply} onChange={e => setForm(f => ({ ...f, place_of_supply: e.target.value }))} className="w-full px-4 py-3 rounded-2xl border border-white/5 bg-kraft-surface2/20 text-white text-sm outline-none">
                     <option value="" className="bg-kraft-surface">Select State</option>
                     {STATES.map(s => <option key={s} value={s} className="bg-kraft-surface">{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-[#444] uppercase mb-2">Document Type</label>
+                  <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full px-4 py-3 rounded-2xl border border-white/5 bg-kraft-surface2/20 text-white text-sm outline-none">
+                    <option value="invoice" className="bg-kraft-surface">Tax Invoice</option>
+                    <option value="quote" className="bg-kraft-surface">Quote / Estimate</option>
+                    <option value="proforma" className="bg-kraft-surface">Proforma Invoice</option>
                   </select>
                 </div>
                 <div className="col-span-2">

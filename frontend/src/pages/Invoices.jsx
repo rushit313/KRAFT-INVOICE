@@ -375,7 +375,11 @@ export default function Invoices() {
                         className={`group cursor-pointer transition-all duration-300 ${selectedInvoice?.id === inv.id ? 'bg-white/[0.03]' : 'hover:bg-white/[0.01]'}`}
                       >
                         <td className="pl-6">
-                           <div className={`text-sm font-black transition-colors ${selectedInvoice?.id === inv.id ? 'text-kraft-accent' : 'text-white'}`}>{inv.invoice_no}</div>
+                           <div className="flex items-center gap-2">
+                             <div className={`text-sm font-black transition-colors ${selectedInvoice?.id === inv.id ? 'text-kraft-accent' : 'text-white'}`}>{inv.invoice_no}</div>
+                             {inv.type === 'quote' && <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest border border-blue-500/20">Quote</span>}
+                             {inv.type === 'proforma' && <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-widest border border-purple-500/20">Proforma</span>}
+                           </div>
                            <div className="text-[10px] text-[#555] font-bold mt-1 uppercase tracking-tight">{inv.issue_date}</div>
                         </td>
                         <td>
